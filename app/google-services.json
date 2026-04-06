@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "43774249220",
+    "project_id": "roomtune-6807b",
+    "storage_bucket": "roomtune-6807b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:43774249220:android:648d9f45c1962700f7e851",
+        "android_client_info": {
+          "package_name": "com.example.roomtune"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbSZ8y_Wacsi3faS6tmUUnt0LB7Qb1coU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
