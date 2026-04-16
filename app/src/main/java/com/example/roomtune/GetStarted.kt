@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,9 +55,9 @@ fun GetStarted(navController: NavHostController){
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         Text(
             "Manage room reservations, monitor schedules, and keep all bookings organized in one place.",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
@@ -86,8 +87,8 @@ fun GetStarted(navController: NavHostController){
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+            border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
+                brush = SolidColor(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             )
         ) {
             Text("View Schedules", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)

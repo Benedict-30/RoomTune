@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.roomtune.model.Reservation
+import com.example.roomtune.util.formatTo12Hour
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
@@ -33,7 +35,9 @@ fun ViewReservationScreen(
     reservationList: MutableList<Reservation>, 
     isAdmin: Boolean = true,
     isDarkMode: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    onNavigate: ((String) -> Unit)? = null,
+    wrapInScaffold: Boolean = true
 ){
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
@@ -52,14 +56,7 @@ fun ViewReservationScreen(
         }
     }
 
-    MainScaffold(
-        title = if (isAdmin) "Manage Schedules" else "Room Schedules",
-        navController = navController,
-        currentRoute = if (isAdmin) "viewStudents" else "publicSchedules",
-        isAdmin = isAdmin,
-        isDarkMode = isDarkMode,
-        onThemeToggle = onThemeToggle
-    ) { paddingValues ->
+    val content = @Composable { paddingValues: PaddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -98,14 +95,17 @@ fun ViewReservationScreen(
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            if (searchQuery.isEmpty()) "No reservations found" else "No matches found for \"$searchQuery\"", 
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), 
+                            if (searchQuery.isEmpty()) "No reservations found" else "No matches found for \"$searchQuery\"",
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             fontSize = 18.sp
                         )
                         if (isAdmin && searchQuery.isEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
-                                onClick = { navController.navigate("reserveRoom") },
+                                onClick = {
+                                    if (onNavigate != null) onNavigate("reserveRoom")
+                                    else navController.navigate("reserveRoom")
+                                },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                             ) {
                                 Text("Make one now", color = MaterialTheme.colorScheme.primary)
@@ -117,7 +117,7 @@ fun ViewReservationScreen(
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(filteredReservations) { reservation ->
                         val originalIndex = reservationList.indexOf(reservation)
-                        
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -186,7 +186,10 @@ fun ViewReservationScreen(
             if (isAdmin) {
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedButton(
-                    onClick = { navController.navigate("home") },
+                    onClick = {
+                        if (onNavigate != null) onNavigate("home")
+                        else navController.navigate("home")
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
@@ -199,6 +202,21 @@ fun ViewReservationScreen(
                 }
             }
         }
+    }
+
+    if (wrapInScaffold) {
+        MainScaffold(
+            title = if (isAdmin) "Manage Schedules" else "Room Schedules",
+            navController = navController,
+            currentRoute = if (isAdmin) "viewStudents" else "publicSchedules",
+            isAdmin = isAdmin,
+            isDarkMode = isDarkMode,
+            onThemeToggle = onThemeToggle,
+            onNavigate = onNavigate,
+            content = content
+        )
+    } else {
+        content(PaddingValues(0.dp))
     }
 }
 

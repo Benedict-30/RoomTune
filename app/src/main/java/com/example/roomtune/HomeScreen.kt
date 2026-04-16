@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.roomtune.model.Reservation
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -22,24 +23,20 @@ fun HomeScreen(
     navController: NavHostController, 
     reservationList: List<Reservation>,
     isDarkMode: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    onNavigate: ((String) -> Unit)? = null,
+    wrapInScaffold: Boolean = true
 ){
-    val calendar = Calendar.getInstance()
-    val currentDate = SimpleDateFormat("M/d/yyyy", Locale.getDefault()).format(calendar.time)
-    val currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)
+    val content = @Composable { paddingValues: PaddingValues ->
+        val calendar = Calendar.getInstance()
+        val currentDate = SimpleDateFormat("M/d/yyyy", Locale.getDefault()).format(calendar.time)
+        val currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)
 
-    val activeRoomsCount = reservationList.count { 
-        it.date == currentDate && currentTime >= it.timeIn && currentTime <= it.timeOut 
-    }
-    val totalBookings = reservationList.size
+        val activeRoomsCount = reservationList.count { 
+            it.date == currentDate && currentTime >= it.timeIn && currentTime <= it.timeOut 
+        }
+        val totalBookings = reservationList.size
 
-    MainScaffold(
-        title = "Dashboard", 
-        navController = navController, 
-        currentRoute = "home",
-        isDarkMode = isDarkMode,
-        onThemeToggle = onThemeToggle
-    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -60,9 +57,9 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 fontSize = 16.sp
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -83,18 +80,18 @@ fun HomeScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Text(
                 "Overview",
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Row(modifier = Modifier.fillMaxWidth()) {
                 DashboardStatCard(
                     title = "Active",
@@ -113,6 +110,20 @@ fun HomeScreen(
                 )
             }
         }
+    }
+
+    if (wrapInScaffold) {
+        MainScaffold(
+            title = "Dashboard", 
+            navController = navController, 
+            currentRoute = "home",
+            isDarkMode = isDarkMode,
+            onThemeToggle = onThemeToggle,
+            onNavigate = onNavigate,
+            content = content
+        )
+    } else {
+        content(PaddingValues(0.dp))
     }
 }
 

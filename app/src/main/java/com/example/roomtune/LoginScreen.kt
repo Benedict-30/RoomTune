@@ -39,8 +39,8 @@ fun LoginScreen(navController: NavHostController) {
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    // Attempt to get the Web Client ID from resources. 
-    // Note: You must have an updated google-services.json from Firebase Console 
+    // Attempt to get the Web Client ID from resources.
+    // Note: You must have an updated google-services.json from Firebase Console
     // with Google Sign-In enabled for this to be generated automatically.
     val webClientId = try {
         context.getString(R.string.default_web_client_id)

@@ -36,6 +36,11 @@ android {
     }
 }
 
+// Rename the output APK prefix to RoomTune
+base {
+    archivesName.set("RoomTune")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

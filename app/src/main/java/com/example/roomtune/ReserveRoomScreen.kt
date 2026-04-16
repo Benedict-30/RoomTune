@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.roomtune.model.Reservation
+import com.example.roomtune.util.formatTo12Hour
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 
@@ -30,7 +32,9 @@ fun ReserveRoomScreen(
     reservationList: MutableList<Reservation>, 
     editingIndex: Int = -1,
     isDarkMode: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    onNavigate: ((String) -> Unit)? = null,
+    wrapInScaffold: Boolean = true
 ){
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
@@ -73,13 +77,7 @@ fun ReserveRoomScreen(
         }, hour, minute, false
     )
 
-    MainScaffold(
-        title = if (isEditing) "Edit Reservation" else "New Reservation", 
-        navController = navController, 
-        currentRoute = "reserveRoom",
-        isDarkMode = isDarkMode,
-        onThemeToggle = onThemeToggle
-    ) { paddingValues ->
+    val content = @Composable { paddingValues: PaddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -97,7 +95,7 @@ fun ReserveRoomScreen(
                 label = "Room Number",
                 placeholder = "e.g. 101"
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             ReservationField(
@@ -133,7 +131,7 @@ fun ReserveRoomScreen(
                     disabledTrailingIconColor = MaterialTheme.colorScheme.primary
                 )
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -169,7 +167,7 @@ fun ReserveRoomScreen(
                     )
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             ReservationField(
@@ -220,7 +218,8 @@ fun ReserveRoomScreen(
 
                                 task.addOnSuccessListener {
                                     isSaving = false
-                                    navController.navigate("viewStudents") {
+                                    if (onNavigate != null) onNavigate("viewStudents")
+                                    else navController.navigate("viewStudents") {
                                         popUpTo("home") { inclusive = false }
                                     }
                                 }.addOnFailureListener { e ->
@@ -241,6 +240,20 @@ fun ReserveRoomScreen(
                 }
             }
         }
+    }
+
+    if (wrapInScaffold) {
+        MainScaffold(
+            title = if (isEditing) "Edit Reservation" else "New Reservation", 
+            navController = navController, 
+            currentRoute = "reserveRoom",
+            isDarkMode = isDarkMode,
+            onThemeToggle = onThemeToggle,
+            onNavigate = onNavigate,
+            content = content
+        )
+    } else {
+        content(PaddingValues(0.dp))
     }
 }
 

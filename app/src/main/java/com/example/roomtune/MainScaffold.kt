@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.NightlightRound
 import androidx.compose.material.icons.filled.WbSunny
@@ -25,6 +26,7 @@ fun MainScaffold(
     isAdmin: Boolean = true,
     isDarkMode: Boolean = true,
     onThemeToggle: () -> Unit = {},
+    onNavigate: ((String) -> Unit)? = null, // Added for pager support
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -61,9 +63,30 @@ fun MainScaffold(
                     containerColor = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 ) {
+                    // Navigation for Dashboard (Home)
+                    NavigationBarItem(
+                        selected = currentRoute == "home",
+                        onClick = { 
+                            if (onNavigate != null) onNavigate("home")
+                            else if (currentRoute != "home") navController.navigate("home") 
+                        },
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        label = { Text("Home") },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = MaterialTheme.colorScheme.primary,
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                            unselectedIconColor = Color.Gray,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedTextColor = Color.Gray
+                        )
+                    )
+
                     NavigationBarItem(
                         selected = currentRoute == "reserveRoom",
-                        onClick = { if (currentRoute != "reserveRoom") navController.navigate("reserveRoom") },
+                        onClick = { 
+                            if (onNavigate != null) onNavigate("reserveRoom")
+                            else if (currentRoute != "reserveRoom") navController.navigate("reserveRoom") 
+                        },
                         icon = { Icon(Icons.Default.Add, contentDescription = "Reserve") },
                         label = { Text("Reserve") },
                         colors = NavigationBarItemDefaults.colors(
@@ -76,7 +99,10 @@ fun MainScaffold(
                     )
                     NavigationBarItem(
                         selected = currentRoute == "viewStudents",
-                        onClick = { if (currentRoute != "viewStudents") navController.navigate("viewStudents") },
+                        onClick = { 
+                            if (onNavigate != null) onNavigate("viewStudents")
+                            else if (currentRoute != "viewStudents") navController.navigate("viewStudents") 
+                        },
                         icon = { Icon(Icons.Default.List, contentDescription = "Schedules") },
                         label = { Text("Schedules") },
                         colors = NavigationBarItemDefaults.colors(
