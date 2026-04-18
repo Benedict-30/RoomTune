@@ -29,7 +29,7 @@ import java.util.*
 @Composable
 fun ReserveRoomScreen(
     navController: NavHostController, 
-    reservationList: MutableList<Reservation>, 
+    reservationList: MutableList<Reservation>,
     editingIndex: Int = -1,
     isDarkMode: Boolean,
     onThemeToggle: () -> Unit,

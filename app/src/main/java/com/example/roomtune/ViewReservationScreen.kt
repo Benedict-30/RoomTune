@@ -32,7 +32,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun ViewReservationScreen(
     navController: NavHostController, 
-    reservationList: MutableList<Reservation>, 
+    reservationList: MutableList<Reservation>,
     isAdmin: Boolean = true,
     isDarkMode: Boolean,
     onThemeToggle: () -> Unit,
