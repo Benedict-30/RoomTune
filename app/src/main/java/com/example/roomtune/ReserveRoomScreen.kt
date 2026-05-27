@@ -21,9 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomtune.model.Reservation
 import com.example.roomtune.util.formatTo12Hour
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.roomtune.viewmodel.ReservationViewModel
 import java.util.*
 
 @Composable
@@ -34,10 +35,10 @@ fun ReserveRoomScreen(
     isDarkMode: Boolean,
     onThemeToggle: () -> Unit,
     onNavigate: ((String) -> Unit)? = null,
-    wrapInScaffold: Boolean = true
+    wrapInScaffold: Boolean = true,
+    viewModel: ReservationViewModel = viewModel()
 ){
     val context = LocalContext.current
-    val db = FirebaseFirestore.getInstance()
     val isEditing = editingIndex != -1
     val existingReservation = if (isEditing) reservationList.getOrNull(editingIndex) else null
 
@@ -192,40 +193,24 @@ fun ReserveRoomScreen(
                                 return@Button
                             }
 
-                            val isConflict = reservationList.filterIndexed { index, _ -> index != editingIndex }.any {
-                                it.room == roomNum && it.building == building && it.date == date &&
-                                (timeIn < it.timeOut && it.timeIn < timeOut)
-                            }
-
-                            if (isConflict) {
-                                Toast.makeText(context, "Already reserved for this time range", Toast.LENGTH_SHORT).show()
-                            } else {
-                                isSaving = true
-                                val reservationData = hashMapOf(
-                                    "room" to roomNum,
-                                    "building" to building,
-                                    "date" to date,
-                                    "timeIn" to timeIn,
-                                    "timeOut" to timeOut,
-                                    "purpose" to purpose
-                                )
-
-                                val task = if (isEditing && existingReservation != null) {
-                                    db.collection("schedules").document(existingReservation.id).set(reservationData)
-                                } else {
-                                    db.collection("schedules").add(reservationData)
-                                }
-
-                                task.addOnSuccessListener {
-                                    isSaving = false
+                            isSaving = true
+                            viewModel.saveReservation(
+                                room = roomNum,
+                                building = building,
+                                date = date,
+                                timeIn = timeIn,
+                                timeOut = timeOut,
+                                purpose = purpose,
+                                id = existingReservation?.id
+                            ) { success, error ->
+                                isSaving = false
+                                if (success) {
                                     if (onNavigate != null) onNavigate("viewStudents")
                                     else navController.navigate("viewStudents") {
                                         popUpTo("home") { inclusive = false }
                                     }
-                                }.addOnFailureListener { e ->
-                                    isSaving = false
-                                    Log.e("ReserveRoomScreen", "Error saving schedule", e)
-                                    Toast.makeText(context, "Failed to save schedule: ${e.message}", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, error ?: "Save failed", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         } else {

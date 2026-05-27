@@ -19,8 +19,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.roomtune.model.Reservation
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomtune.ui.theme.RoomTuneTheme
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.roomtune.viewmodel.ReservationViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,71 +34,27 @@ class MainActivity : ComponentActivity() {
             val systemTheme = isSystemInDarkTheme()
             var isDarkMode by remember { mutableStateOf(systemTheme) }
             
-            val db = FirebaseFirestore.getInstance()
-            val reservationList = remember { mutableStateListOf<Reservation>() }
-
-            // Sync with Firestore and auto-cleanup expired schedules
-            DisposableEffect(Unit) {
-                val registration = db.collection("schedules")
-                    .addSnapshotListener { snapshot, e ->
-                        if (e != null) {
-                            Log.w("MainActivity", "Listen failed.", e)
-                            return@addSnapshotListener
-                        }
-
-                        if (snapshot != null) {
-                            val list = snapshot.toObjects(Reservation::class.java)
-                            reservationList.clear()
-                            reservationList.addAll(list)
-
-                            // Auto-cleanup logic
-                            cleanupExpiredSchedules(db, list)
-                        }
-                    }
-                onDispose {
-                    registration.remove()
-                }
-            }
+            val viewModel: ReservationViewModel = viewModel()
 
             RoomTuneTheme(darkTheme = isDarkMode) {
                 MyApp(
                     isDarkMode = isDarkMode,
                     onThemeToggle = { isDarkMode = !isDarkMode },
-                    reservationList = reservationList
+                    reservationList = viewModel.reservationList,
+                    viewModel = viewModel
                 )
-            }
-        }
-    }
-
-    private fun cleanupExpiredSchedules(db: FirebaseFirestore, list: List<Reservation>) {
-        val now = Calendar.getInstance().time
-        val dateTimeFormat = SimpleDateFormat("M/d/yyyy HH:mm", Locale.getDefault())
-
-        list.forEach { reservation ->
-            if (reservation.date.isNotEmpty() && reservation.timeOut.isNotEmpty()) {
-                try {
-                    val endDateTimeStr = "${reservation.date} ${reservation.timeOut}"
-                    val endDate = dateTimeFormat.parse(endDateTimeStr)
-
-                    if (endDate != null && endDate.before(now)) {
-                        db.collection("schedules").document(reservation.id).delete()
-                            .addOnSuccessListener {
-                                Log.d("Cleanup", "Automatically deleted expired schedule: ${reservation.id}")
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("Cleanup", "Failed to delete expired schedule", e)
-                            }
-                    }
-                } catch (e: Exception) {
-                    Log.e("Cleanup", "Error parsing date/time for reservation ${reservation.id}", e)
-                }
             }
         }
     }
 }
 
 @Composable
-fun MyApp(isDarkMode: Boolean, onThemeToggle: () -> Unit, reservationList: MutableList<Reservation>){
+fun MyApp(
+    isDarkMode: Boolean, 
+    onThemeToggle: () -> Unit, 
+    reservationList: MutableList<Reservation>,
+    viewModel: ReservationViewModel
+){
     val navController = rememberNavController()
 
     NavHost(
@@ -135,23 +92,37 @@ fun MyApp(isDarkMode: Boolean, onThemeToggle: () -> Unit, reservationList: Mutab
             LoginScreen(navController)
         }
         composable("home"){
-            AdminMainPager(navController, reservationList, isDarkMode, onThemeToggle, 0)
+            AdminMainPager(navController, reservationList, isDarkMode, onThemeToggle, viewModel, 0)
         }
         composable("reserveRoom"){
-            AdminMainPager(navController, reservationList, isDarkMode, onThemeToggle, 1)
+            AdminMainPager(navController, reservationList, isDarkMode, onThemeToggle, viewModel, 1)
         }
         composable("viewStudents"){
-            AdminMainPager(navController, reservationList, isDarkMode, onThemeToggle, 2)
+            AdminMainPager(navController, reservationList, isDarkMode, onThemeToggle, viewModel, 2)
         }
         composable(
             "editRoom/{index}",
             arguments = listOf(navArgument("index") { type = NavType.IntType })
         ){ backStackEntry ->
             val index = backStackEntry.arguments?.getInt("index") ?: -1
-            ReserveRoomScreen(navController, reservationList, index, isDarkMode = isDarkMode, onThemeToggle = onThemeToggle)
+            ReserveRoomScreen(
+                navController, 
+                reservationList, 
+                index, 
+                isDarkMode = isDarkMode, 
+                onThemeToggle = onThemeToggle,
+                viewModel = viewModel
+            )
         }
         composable("publicSchedules"){
-            ViewReservationScreen(navController, reservationList, isAdmin = false, isDarkMode = isDarkMode, onThemeToggle = onThemeToggle)
+            ViewReservationScreen(
+                navController, 
+                reservationList, 
+                isAdmin = false, 
+                isDarkMode = isDarkMode, 
+                onThemeToggle = onThemeToggle,
+                viewModel = viewModel
+            )
         }
     }
 }
@@ -162,6 +133,7 @@ fun AdminMainPager(
     reservationList: MutableList<Reservation>, 
     isDarkMode: Boolean, 
     onThemeToggle: () -> Unit,
+    viewModel: ReservationViewModel,
     initialPage: Int = 0
 ) {
     val pagerState = rememberPagerState(initialPage = initialPage) { 3 }
@@ -222,7 +194,8 @@ fun AdminMainPager(
                     reservationList = reservationList, 
                     isDarkMode = isDarkMode, 
                     onThemeToggle = onThemeToggle,
-                    wrapInScaffold = false
+                    wrapInScaffold = false,
+                    viewModel = viewModel
                 )
                 2 -> ViewReservationScreen(
                     navController = navController, 
@@ -230,7 +203,8 @@ fun AdminMainPager(
                     isAdmin = true, 
                     isDarkMode = isDarkMode, 
                     onThemeToggle = onThemeToggle,
-                    wrapInScaffold = false
+                    wrapInScaffold = false,
+                    viewModel = viewModel
                 )
             }
         }

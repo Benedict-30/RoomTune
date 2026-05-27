@@ -1,4 +1,4 @@
-package com.example.roomtune
+ package com.example.roomtune
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -25,9 +25,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomtune.model.Reservation
 import com.example.roomtune.util.formatTo12Hour
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.roomtune.viewmodel.ReservationViewModel
 
 @Composable
 fun ViewReservationScreen(
@@ -37,10 +38,10 @@ fun ViewReservationScreen(
     isDarkMode: Boolean,
     onThemeToggle: () -> Unit,
     onNavigate: ((String) -> Unit)? = null,
-    wrapInScaffold: Boolean = true
+    wrapInScaffold: Boolean = true,
+    viewModel: ReservationViewModel = viewModel()
 ){
     val context = LocalContext.current
-    val db = FirebaseFirestore.getInstance()
     var searchQuery by remember { mutableStateOf("") }
     
     val filteredReservations = remember(searchQuery, reservationList.toList()) {
@@ -156,13 +157,13 @@ fun ViewReservationScreen(
                                             Spacer(modifier = Modifier.width(8.dp))
                                             IconButton(
                                                 onClick = {
-                                                    db.collection("schedules").document(reservation.id).delete()
-                                                        .addOnSuccessListener {
+                                                    viewModel.deleteReservation(reservation.id) { success, error ->
+                                                        if (success) {
                                                             Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show()
+                                                        } else {
+                                                            Toast.makeText(context, "Delete failed: $error", Toast.LENGTH_SHORT).show()
                                                         }
-                                                        .addOnFailureListener { e ->
-                                                            Toast.makeText(context, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                                                        }
+                                                    }
                                                 },
                                                 colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
                                             ) {
